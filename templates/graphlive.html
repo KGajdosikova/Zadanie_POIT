@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Finalne zadanie - Graf</title>
+   <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
+   <script src="static/libs/plotly-latest.min.js"></script>
+   <script type="text/javascript" charset="utf-8">
+     $(document).ready(function() {    
+      var x = new Array();
+      var y = new Array();
+      var trace;
+      var layout;
+      
+      namespace = '/test';
+      var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+      socket.on('connect', function() {
+        socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
+
+      socket.on('my_response', function(msg) {
+        console.log(msg.data);
+        $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html(); 
+        x.push(parseFloat(msg.count));
+        y.push(parseFloat(msg.data));
+        trace = {
+            x: x,
+            y: y,
+        };       
+        layout = {
+          title: 'Intenzita svetla okolia',
+          xaxis: {
+              title: 'vzorky',
+          },
+          yaxis: {
+              title: 'hodnota odporu',
+              //range: [-1,1]
+          }
+        };
+        console.log(trace);
+        var traces = new Array();
+        traces.push(trace);
+        Plotly.newPlot($('#plotdiv')[0], traces, layout); 
+        //addTraces               
+        });
+
+      $('form#disconnect').submit(function(event) {
+          socket.emit('disconnect_request');
+          return false; }); 
+      $('form#start').submit(function(event) {
+          socket.emit('start_request');
+          return false; });
+      $('form#stop').submit(function(event) {
+          socket.emit('stop_request');
+          return false; });
+      });
+    </script>
+    <style>
+   .button {
+     border: none;
+     color: white;
+     padding: 16px 32px;
+     text-align: center;
+     text-decoration: none;
+     display: inline-block;
+     font-size: 16px;
+     margin: 4px 2px;
+     transition-duration: 0.4s;
+     cursor: pointer;
+   } 
+
+   .button1 {
+     background-color: white; 
+     color: black; 
+     border: 2px solid #4CAF50;
+   }
+   .button1:hover {
+     background-color: #4CAF50;
+     color: white;
+   }
+      .button2 {
+     background-color: white; 
+     color: black; 
+     border: 2px solid #FF0000;
+   }
+   .button2:hover {
+     background-color: #FF0000;
+     color: white;
+   }  
+   </style>  
+ </head>
+ <body>
+  <h1>Finalne zadanie - Graf</h1>
+  <button class="button button1" onclick="location.href='/gauge'">Zobrazenie gauge</button>
+  <button class="button button1" onclick="location.href='/index'">Zobrazenie hlavnej stranky</button>
+  <form id="disconnect" method="POST" action="#">
+    <input class="button button2" type="submit" value="Disconnect">
+  </form> 
+  <form id="start" method="POST" action="#">
+    <input class="button button2" type="submit" value="Start">
+  </form> 
+  <form id="stop" method="POST" action="#">
+    <input class="button button1" type="submit" value="Stop">
+  </form> 
+  <div id="plotdiv" style="width:600px;height:250px;"></div>
+  <h2>Receive:</h2>
+  <div id="log"></div>
+ </body>
+</html>
